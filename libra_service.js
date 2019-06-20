@@ -1,7 +1,7 @@
 const {streamWrite, streamEnd, onExit, chunksToLinesAsync, chomp} = require('@rauschma/stringio');
 const {spawn} = require('child_process');
-const walelt_path = '/Users/totiz/Desktop/libra_wallet'
-
+const shell = require('shelljs');
+const tmp_wallet_data = '/Users/totiz/wallet_data'
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -11,10 +11,11 @@ class Libra {
   constructor () {
     this.userAddress = ''
     this.balance = ''
+    this.mnemonic = ''
   }
 
   async createAccount() {
-    const source = spawn('docker', ['run', '-v' , walelt_path + ':/wallet', '--rm', '-i', 'thanandorn/libra_client'],
+    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'thanandorn/libra_client'],
       {stdio: ['pipe', 'pipe', process.stderr]});
   
     this.createAccountWriteToWritable(source.stdin);
@@ -24,7 +25,8 @@ class Libra {
     // console.log('### DONE');
     return {
       address: this.userAddress,
-      balance: this.balance
+      balance: this.balance,
+      mnemonic: this.mnemonic
     }
   }
   
@@ -34,16 +36,18 @@ class Libra {
     await sleep(1000)
     await streamWrite(writable, 'account mint 0 100\n');
     await sleep(1000)
-    await streamWrite(writable, 'account list\n');
-    await sleep(1000)
+    // await streamWrite(writable, 'account list\n');
+    // await sleep(1000)
     await streamWrite(writable, `query balance 0\n`);
     await sleep(1000)
+    console.log(`writing to /wallet_data/${this.userAddress}`)
+    await streamWrite(writable, `account write /wallet_data/${this.userAddress}\n`);
+    await sleep(2000)
+    this.mnemonic = shell.cat(tmp_wallet_data + '/' + this.userAddress).stdout.replace('\n', '')
+    console.log('mnemonic', this.mnemonic)
+
+
     await streamWrite(writable, 'quit\n');
-    // await streamWrite(writable, 'First line\n');
-    // await sleep(1000)
-    // await streamWrite(writable, 'Second line\n');
-    // await sleep(1000)
-    // await streamEnd(writable);
   }
   
   async createAccountReadable(readable) {
@@ -63,16 +67,3 @@ class Libra {
 }
 
 module.exports = Libra
-
-
-// (async () => {
-//   try {
-//     let libra = new Libra()
-//     let wallet = await libra.createAccount()
-//     console.log('wallet', wallet)
-
-//   } catch (error) {
-//     logger.error(error)
-//   }
-// })()
-
