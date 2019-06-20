@@ -62,15 +62,17 @@ class Libra {
   }  
 }
 
+module.exports = Libra
 
 
-(async () => {
-  try {
-    let libra = new Libra()
-    let wallet = await libra.createAccount()
-    console.log('wallet', wallet)
+// (async () => {
+//   try {
+//     let libra = new Libra()
+//     let wallet = await libra.createAccount()
+//     console.log('wallet', wallet)
 
-  } catch (error) {
-    logger.error(error)
-  }
-})()
+//   } catch (error) {
+//     logger.error(error)
+//   }
+// })()
+
