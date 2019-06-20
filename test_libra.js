@@ -27,7 +27,11 @@ async function writeToWritable(writable) {
   await sleep(2000)
   await streamWrite(writable, 'account create\n');
   await sleep(1000)
+  await streamWrite(writable, 'account mint 0 100\n');
+  await sleep(1000)
   await streamWrite(writable, 'account list\n');
+  await sleep(1000)
+  await streamWrite(writable, `query balance 0\n`);
   await sleep(1000)
   await streamWrite(writable, 'quit\n');
   // await streamWrite(writable, 'First line\n');
@@ -42,6 +46,8 @@ async function echoReadable(readable) {
     if (-1 != line.search("Created/retrieved account #0")) {
       let address = line.split('account #0 address ')[1]
       console.log('Your address: ' + address)
+    } else if (-1 != line.search("Too Many Requests")) {
+      console.error('Too Many Requests: ', line)
     }
     console.log('LINE: '+chomp(line))
   }
