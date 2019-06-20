@@ -79,7 +79,7 @@ class Libra {
     await streamWrite(writable, 'account create\n');
     await sleep(1000)
     await streamWrite(writable, 'account mint 0 100\n');
-    await sleep(1000)
+    await sleep(2000)
     // await streamWrite(writable, 'account list\n');
     // await sleep(1000)
     await streamWrite(writable, `query balance 0\n`);
