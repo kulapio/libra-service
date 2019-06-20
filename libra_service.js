@@ -29,6 +29,22 @@ class Libra {
       mnemonic: this.mnemonic
     }
   }
+
+  async getBalance(address) {
+    this.userAddress = address
+    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'thanandorn/libra_client'],
+      {stdio: ['pipe', 'pipe', process.stderr]});
+  
+    this.queryBalanceWriteToWritable(source.stdin);
+    await this.createAccountReadable(source.stdout);
+    // await onExit(source);
+  
+    // console.log('### DONE');
+    return {
+      address: this.userAddress,
+      balance: this.balance
+    }
+  }
   
   async createAccountWriteToWritable(writable) {
     await sleep(2000)
@@ -46,6 +62,14 @@ class Libra {
     this.mnemonic = shell.cat(tmp_wallet_data + '/' + this.userAddress).stdout.replace('\n', '')
     console.log('mnemonic', this.mnemonic)
 
+
+    await streamWrite(writable, 'quit\n');
+  }
+
+  async queryBalanceWriteToWritable(writable) {
+    await sleep(2000)
+    await streamWrite(writable, `query balance ${this.userAddress}\n`);
+    await sleep(1000)
 
     await streamWrite(writable, 'quit\n');
   }
