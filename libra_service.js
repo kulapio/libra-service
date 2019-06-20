@@ -1,6 +1,9 @@
 const {streamWrite, streamEnd, onExit, chunksToLinesAsync, chomp} = require('@rauschma/stringio');
 const {spawn} = require('child_process');
 const shell = require('shelljs');
+const util = require('util')
+const fs = require('fs');
+const fs_writeFile = util.promisify(fs.writeFile)
 const tmp_wallet_data = '/Users/totiz/wallet_data'
 
 const sleep = (milliseconds) => {
@@ -12,6 +15,10 @@ class Libra {
     this.userAddress = ''
     this.balance = ''
     this.mnemonic = ''
+
+    // Transfer
+    this.toAddress = ''
+    this.amountToTransfer = ''
   }
 
   async createAccount() {
@@ -45,6 +52,27 @@ class Libra {
       balance: this.balance
     }
   }
+
+  async transfer(fromAddress, mnemonic, toAddress, amount) {
+    this.userAddress = fromAddress
+    this.mnemonic = mnemonic
+    this.toAddress = toAddress
+    this.amountToTransfer = amount
+    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'thanandorn/libra_client'],
+      {stdio: ['pipe', 'pipe', process.stderr]});
+  
+    this.transferWriteToWritable(source.stdin);
+    await this.createAccountReadable(source.stdout);
+    // await onExit(source);
+  
+    // console.log('### DONE');
+    return {
+      address: this.userAddress,
+      toAddress: this.toAddress,
+      balance: this.balance,
+      amount: this.amountToTransfer
+    }
+  }
   
   async createAccountWriteToWritable(writable) {
     await sleep(2000)
@@ -71,6 +99,19 @@ class Libra {
     await streamWrite(writable, `query balance ${this.userAddress}\n`);
     await sleep(1000)
 
+    await streamWrite(writable, 'quit\n');
+  }
+
+  async transferWriteToWritable(writable) {
+    // Save mnemonic to file
+    await fs_writeFile(tmp_wallet_data + '/' + this.userAddress, this.mnemonic)
+
+    await sleep(2000)
+    await streamWrite(writable, 'account recover /wallet_data/' + this.userAddress + ' \n');
+    await sleep(1000)
+    await streamWrite(writable, 'transferb 0 ' + this.toAddress + ' ' + this.amountToTransfer + ' \n');
+
+    await sleep(1000)
     await streamWrite(writable, 'quit\n');
   }
   

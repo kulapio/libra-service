@@ -35,6 +35,18 @@ app.post('/getBalance', async function(req, res){
    res.send(wallet);
 });
 
+app.post('/transfer', async function(req, res){
+  console.log('req body', req.body)
+  let fromAddress = req.body.fromAddress
+  let mnemonic = req.body.mnemonic
+  let toAddress = req.body.toAddress
+  let amount = req.body.amount
+  let libra = new Libra()
+  let wallet = await libra.transfer(fromAddress, mnemonic, toAddress, amount)
+  console.log('wallet', wallet)
+   res.send(wallet);
+});
+
 
 app.listen(PORT, () => {
   console.log('Server is running on PORT:',PORT);
