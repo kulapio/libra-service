@@ -22,7 +22,7 @@ class Libra {
   }
 
   async createAccount() {
-    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'thanandorn/libra_client'],
+    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
       {stdio: ['pipe', 'pipe', process.stderr]});
   
     this.createAccountWriteToWritable(source.stdin);
@@ -39,7 +39,7 @@ class Libra {
 
   async getBalance(address) {
     this.userAddress = address
-    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'thanandorn/libra_client'],
+    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
       {stdio: ['pipe', 'pipe', process.stderr]});
   
     this.queryBalanceWriteToWritable(source.stdin);
@@ -58,7 +58,7 @@ class Libra {
     this.mnemonic = mnemonic
     this.toAddress = toAddress
     this.amountToTransfer = amount
-    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'thanandorn/libra_client'],
+    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
       {stdio: ['pipe', 'pipe', process.stderr]});
   
     this.transferWriteToWritable(source.stdin);
@@ -120,8 +120,10 @@ class Libra {
       if (-1 != line.search("Created/retrieved account #0")) {
         this.userAddress = line.split('account #0 address ')[1].replace('\n', '')
         console.log('Your address: ' + this.userAddress)
+
       } else if (-1 != line.search("Too Many Requests")) {
         console.error('Too Many Requests: ', line)
+
       } else if (-1 != line.search("Balance is: ")) {
         this.balance = line.split('Balance is: ')[1].replace('\n', '')
         console.log('Your balance: ' + this.balance)
