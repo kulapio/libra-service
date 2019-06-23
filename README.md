@@ -19,3 +19,9 @@ npm run start
 or
 
 node index.js
+
+# Contributors
+- Tot (Kulap.io, https://github.com/totiz)
+- Big (Kulap.io, https://github.com/biigpongsatorn)
+- Kor (https://github.com/korrio)
+- Bank (https://github.com/zent-bank)
