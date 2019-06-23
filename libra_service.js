@@ -4,7 +4,7 @@ const shell = require('shelljs');
 const util = require('util')
 const fs = require('fs');
 const fs_writeFile = util.promisify(fs.writeFile)
-const tmp_wallet_data = '/Users/totiz/wallet_data'
+const tmp_wallet_data = 'wallet_data'
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -41,6 +41,7 @@ class Libra {
     this.userAddress = address
     const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
       {stdio: ['pipe', 'pipe', process.stderr]});
+    console.log(source);
   
     this.queryBalanceWriteToWritable(source.stdin);
     await this.createAccountReadable(source.stdout);
