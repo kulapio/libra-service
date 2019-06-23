@@ -7,5 +7,7 @@ npm install
 
 # Run
 npm run start
+
 or
+
 node index.js
