@@ -4,7 +4,7 @@ const shell = require('shelljs');
 const util = require('util')
 const fs = require('fs');
 const fs_writeFile = util.promisify(fs.writeFile)
-const tmp_wallet_data = '/Users/totiz/wallet_data'
+const tmp_wallet_data = './wallet_data'
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
