@@ -41,6 +41,7 @@ class Libra {
     this.userAddress = address
     const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
       {stdio: ['pipe', 'pipe', process.stderr]});
+    console.log(source);
   
     this.queryBalanceWriteToWritable(source.stdin);
     await this.createAccountReadable(source.stdout);
