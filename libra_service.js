@@ -1,3 +1,4 @@
+require('dotenv').config()
 const {streamWrite, streamEnd, onExit, chunksToLinesAsync, chomp} = require('@rauschma/stringio');
 const {spawn} = require('child_process');
 const shell = require('shelljs');
@@ -17,6 +18,9 @@ class Libra {
     // Container
     this.containerName = this.randomContainerName()
 
+    // Minting
+    this.amountToMint = 100
+
     this.userAddress = ''
     this.balance = ''
     this.mnemonic = ''
@@ -32,12 +36,14 @@ class Libra {
   }
 
   runLibraCli() {
-    const source = spawn('docker', ['run', '--name', this.containerName, '--rm', '-i', 'kulap/libra_client:0.1'],
+    const DOCKER_IMAGE = process.env.DOCKER_IMAGE || 'kulap/libra_client:0.1'
+    const source = spawn('docker', ['run', '--name', this.containerName, '--rm', '-i', DOCKER_IMAGE],
       {stdio: ['pipe', 'pipe', process.stderr]});
     return source
   }
 
-  async createAccount() {
+  async createAccount(amountToMint) {
+    this.amountToMint = amountToMint
     const source = this.runLibraCli()
   
     this.createAccountWriteToWritable(source.stdin);
@@ -92,7 +98,7 @@ class Libra {
     await sleep(2000)
     await streamWrite(writable, 'account create\n');
     await sleep(1000)
-    await streamWrite(writable, 'account mint 0 100\n');
+    await streamWrite(writable, `account mint 0 ${this.amountToMint}\n`);
     await sleep(2000)
     // await streamWrite(writable, 'account list\n');
     // await sleep(1000)
