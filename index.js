@@ -7,6 +7,7 @@ const Libra = require('./libra_service.js')
 const app = express()
 const PORT = process.env.PORT || 3000
 const HOST = process.env.HOST || 'localhost'
+const AMOUNT_TO_MINT = process.env.AMOUNT_TO_MINT || 100
 
 const libra = new Libra()
 
@@ -19,13 +20,13 @@ app.use(function (req, res, next) {
   next()
 })
 
-app.get('/hello', function (req, res) {
-  res.send("Hello World!")
+app.get('/', function (req, res) {
+  res.send("Please read the docs here https://documenter.getpostman.com/view/1671913/S1a32SZ5?version=latest#14a7b4be-ecd3-4b64-905f-5f386a13727a")
 })
 
 app.post('/createWallet', async function (req, res) {
   console.log('req body', req.body)
-  let wallet = await libra.createAccount()
+  let wallet = await libra.createAccount(AMOUNT_TO_MINT)
   console.log('wallet', wallet)
   res.send(wallet)
 })
