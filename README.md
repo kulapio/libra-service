@@ -20,6 +20,15 @@ or
 
 node index.js
 
+# Config
+- Open .evn
+```
+PORT=3000
+HOST=localhost
+AMOUNT_TO_MINT=100
+DOCKER_IMAGE=kulap/libra_client:0.1
+```
+
 # Contributors
 - Tot (Kulap.io, https://github.com/totiz)
 - Big (Kulap.io, https://github.com/biigpongsatorn)
