@@ -2,6 +2,8 @@ require('dotenv').config()
 const {streamWrite, streamEnd, onExit, chunksToLinesAsync, chomp} = require('@rauschma/stringio');
 const {spawn} = require('child_process');
 const shell = require('shelljs');
+const Faucent = require('./faucet.js')
+const USE_KULAP_FAUCET = process.env.USE_KULAP_FAUCET === 'true'
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -20,6 +22,7 @@ class Libra {
 
     // Minting
     this.amountToMint = 100
+    this.faucent = new Faucent()
 
     this.userAddress = ''
     this.balance = ''
@@ -98,8 +101,19 @@ class Libra {
     await sleep(2000)
     await streamWrite(writable, 'account create\n');
     await sleep(1000)
-    await streamWrite(writable, `account mint 0 ${this.amountToMint}\n`);
-    await sleep(2000)
+
+    // Use kulap faucet to prevent too may request error
+    if (USE_KULAP_FAUCET) {
+      await this.faucent.getFaucetFromKulap(this.amountToMint, this.userAddress)
+      await sleep(1000)
+    
+    // Use libra faucet
+    } else {
+      await streamWrite(writable, `account mint 0 ${this.amountToMint}\n`);
+      await sleep(2000)
+    }
+    
+
     // await streamWrite(writable, 'account list\n');
     // await sleep(1000)
     await streamWrite(writable, `query balance 0\n`);
