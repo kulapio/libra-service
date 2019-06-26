@@ -1,17 +1,22 @@
 const {streamWrite, streamEnd, onExit, chunksToLinesAsync, chomp} = require('@rauschma/stringio');
 const {spawn} = require('child_process');
 const shell = require('shelljs');
-const util = require('util')
-const fs = require('fs');
-const fs_writeFile = util.promisify(fs.writeFile)
-const tmp_wallet_data = 'wallet_data'
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 class Libra {
   constructor () {
+    // Container
+    this.containerName = this.randomContainerName()
+
     this.userAddress = ''
     this.balance = ''
     this.mnemonic = ''
@@ -21,12 +26,22 @@ class Libra {
     this.amountToTransfer = ''
   }
 
-  async createAccount() {
-    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
+  // Use for random generated container name
+  randomContainerName() {
+    return 'kulap' + getRandomInt(0, 1000000000).toString(10)
+  }
+
+  runLibraCli() {
+    const source = spawn('docker', ['run', '--name', this.containerName, '--rm', '-i', 'kulap/libra_client:0.1'],
       {stdio: ['pipe', 'pipe', process.stderr]});
+    return source
+  }
+
+  async createAccount() {
+    const source = this.runLibraCli()
   
     this.createAccountWriteToWritable(source.stdin);
-    await this.createAccountReadable(source.stdout);
+    await this.libraCliReadable(source.stdout);
     // await onExit(source);
   
     // console.log('### DONE');
@@ -39,12 +54,11 @@ class Libra {
 
   async getBalance(address) {
     this.userAddress = address
-    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
-      {stdio: ['pipe', 'pipe', process.stderr]});
-    console.log(source);
+    const source = this.runLibraCli()
+    // console.log(source);
   
     this.queryBalanceWriteToWritable(source.stdin);
-    await this.createAccountReadable(source.stdout);
+    await this.libraCliReadable(source.stdout);
     // await onExit(source);
   
     // console.log('### DONE');
@@ -59,18 +73,17 @@ class Libra {
     this.mnemonic = mnemonic
     this.toAddress = toAddress
     this.amountToTransfer = amount
-    const source = spawn('docker', ['run', '-v', tmp_wallet_data + ':/wallet_data', '--rm', '-i', 'kulap/libra_client:0.1'],
-      {stdio: ['pipe', 'pipe', process.stderr]});
+    const source = this.runLibraCli()
   
     this.transferWriteToWritable(source.stdin);
-    await this.createAccountReadable(source.stdout);
+    await this.libraCliReadable(source.stdout);
     // await onExit(source);
   
     // console.log('### DONE');
     return {
       address: this.userAddress,
       toAddress: this.toAddress,
-      balance: this.balance,
+      // balance: this.balance, // speed up api by not query balance, use getBalance instead
       amount: this.amountToTransfer
     }
   }
@@ -85,12 +98,11 @@ class Libra {
     // await sleep(1000)
     await streamWrite(writable, `query balance 0\n`);
     await sleep(1000)
-    console.log(`writing to /wallet_data/${this.userAddress}`)
-    await streamWrite(writable, `account write /wallet_data/${this.userAddress}\n`);
+    // console.log(`writing to /${this.userAddress}`)
+    // await streamWrite(writable, `account write /wallet_data/${this.userAddress}\n`);
     await sleep(2000)
-    this.mnemonic = shell.cat(tmp_wallet_data + '/' + this.userAddress).stdout.replace('\n', '')
+    this.mnemonic = shell.exec(`docker exec -i ${this.containerName} cat /client.mnemonic`).stdout.replace('\n', '').replace(';0', ';1'); // :1 to tell libra-cli when loaded later that we have 1 account here
     console.log('mnemonic', this.mnemonic)
-
 
     await streamWrite(writable, 'quit\n');
   }
@@ -104,11 +116,12 @@ class Libra {
   }
 
   async transferWriteToWritable(writable) {
-    // Save mnemonic to file
-    await fs_writeFile(tmp_wallet_data + '/' + this.userAddress, this.mnemonic)
-
     await sleep(2000)
-    await streamWrite(writable, 'account recover /wallet_data/' + this.userAddress + ' \n');
+    // Save mnemonic to file
+    const saveResult = shell.exec(`docker exec -i ${this.containerName} bash -c  "echo '${this.mnemonic}' > /user_mnemonic"`).stdout
+    console.log('saveResult', saveResult)
+
+    await streamWrite(writable, 'account recover /user_mnemonic \n');
     await sleep(1000)
     await streamWrite(writable, 'transferb 0 ' + this.toAddress + ' ' + this.amountToTransfer + ' \n');
 
@@ -116,7 +129,7 @@ class Libra {
     await streamWrite(writable, 'quit\n');
   }
   
-  async createAccountReadable(readable) {
+  async libraCliReadable(readable) {
     for await (const line of chunksToLinesAsync(readable)) { // (C)
       if (-1 != line.search("Created/retrieved account #0")) {
         this.userAddress = line.split('account #0 address ')[1].replace('\n', '')
