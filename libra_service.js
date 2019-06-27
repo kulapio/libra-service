@@ -31,6 +31,9 @@ class Libra {
     // Transfer
     this.toAddress = ''
     this.amountToTransfer = ''
+
+    // Transaction
+    this.transactionHistory = []
   }
 
   // Use for random generated container name
@@ -48,11 +51,11 @@ class Libra {
   async createAccount(amountToMint) {
     this.amountToMint = amountToMint
     const source = this.runLibraCli()
-  
+
     this.createAccountWriteToWritable(source.stdin);
     await this.libraCliReadable(source.stdout);
     // await onExit(source);
-  
+
     // console.log('### DONE');
     return {
       address: this.userAddress,
@@ -65,11 +68,11 @@ class Libra {
     this.userAddress = address
     const source = this.runLibraCli()
     // console.log(source);
-  
+
     this.queryBalanceWriteToWritable(source.stdin);
     await this.libraCliReadable(source.stdout);
     // await onExit(source);
-  
+
     // console.log('### DONE');
     return {
       address: this.userAddress,
@@ -83,11 +86,11 @@ class Libra {
     this.toAddress = toAddress
     this.amountToTransfer = amount
     const source = this.runLibraCli()
-  
+
     this.transferWriteToWritable(source.stdin);
     await this.libraCliReadable(source.stdout);
     // await onExit(source);
-  
+
     // console.log('### DONE');
     return {
       address: this.userAddress,
@@ -96,7 +99,19 @@ class Libra {
       amount: this.amountToTransfer
     }
   }
-  
+
+  async queryTransaction(address, event) {
+    this.userAddress = address
+    const source = this.runLibraCli()
+
+    this.queryTransactionWriteToWritable(source.stdin, event)
+    await this.libraCliReadableTransaction(source.stdout)
+
+    return {
+      transactions: this.transactionHistory
+    }
+  }
+
   async createAccountWriteToWritable(writable) {
     await sleep(2000)
     await streamWrite(writable, 'account create\n');
@@ -106,13 +121,13 @@ class Libra {
     if (USE_KULAP_FAUCET) {
       await this.faucent.getFaucetFromKulap(this.amountToMint, this.userAddress)
       await sleep(1000)
-    
-    // Use libra faucet
+
+      // Use libra faucet
     } else {
       await streamWrite(writable, `account mint 0 ${this.amountToMint}\n`);
       await sleep(2000)
     }
-    
+
 
     // await streamWrite(writable, 'account list\n');
     // await sleep(1000)
@@ -135,6 +150,14 @@ class Libra {
     await streamWrite(writable, 'quit\n');
   }
 
+  async queryTransactionWriteToWritable(writable, event) {
+    await sleep(2000)
+    await streamWrite(writable, `query event ${this.userAddress} ${event} 0 true 5\n`);
+    await sleep(1000)
+
+    await streamWrite(writable, 'quit\n');
+  }
+
   async transferWriteToWritable(writable) {
     await sleep(2000)
     // Save mnemonic to file
@@ -148,7 +171,7 @@ class Libra {
     await sleep(1000)
     await streamWrite(writable, 'quit\n');
   }
-  
+
   async libraCliReadable(readable) {
     for await (const line of chunksToLinesAsync(readable)) { // (C)
       if (-1 != line.search("Created/retrieved account #0")) {
@@ -164,7 +187,69 @@ class Libra {
       }
       console.log('LINE: '+chomp(line))
     }
-  }  
+  }
+
+  async libraCliReadableTransaction(readable, event) {
+    let transaction = []
+    let transactionObject = []
+    let currentLine = 0
+    let splitLine = 0
+
+    for await (const line of chunksToLinesAsync(readable)) {
+      // If found EventWithProof set splitLine
+      if (-1 != line.search("EventWithProof {")) {
+        splitLine = currentLine + 5
+      }
+
+      // Each transaction data has 5 lines, push each line to array
+      if (currentLine >= 21 && currentLine <= splitLine) {
+        transaction.push(line.toString().replace('EventWithProof', '').trim())
+      }
+
+      // Concat array string when currentLine equal splitLine
+      if ((currentLine !== 0 && splitLine !== 0) && (currentLine === splitLine)) {
+        transactionObject.push(transaction.join(''))
+        transaction = []
+      }
+
+      // Increase currentLine each loop
+      currentLine = currentLine + 1
+      console.log(`LINE: ${chomp(line)}`)
+    }
+
+    // Convert transaction data (raw string) to json data
+    for (let i = 0; i < transactionObject.length; i++) { // (C) totiz  
+      let result = await this.convertTransactionResultToJson(transactionObject[i])
+      this.transactionHistory.push(JSON.parse(result))
+    }
+  }
+
+  replaceAll(text, search, replacement) { // (C) totiz  
+    return text.split(search).join(replacement)
+  }
+  
+  convertTransactionResultToJson(transactionString) { // (C) totiz  
+    // Remove object name
+    let result = transactionString
+    result = this.replaceAll(result, 'ContractEvent ', '')
+    result = this.replaceAll(result, 'AccessPath ', '')
+    result = this.replaceAll(result, 'AccountEvent ', '')
+    result = this.replaceAll(result, 'EventProof ', '')
+    result = this.replaceAll(result, 'AccumulatorProof ', '') 
+    result = this.replaceAll(result, 'TransactionInfo ', '') 
+     
+    // Add string quote to text value
+    result = result.replace(/address: ([0-9a-zA-Z]+)/g, 'address: "$1"')
+    result = result.replace(/type: ([0-9a-zA-Z]+)/g, 'type: "$1"')
+    result = result.replace(/account: ([0-9a-zA-Z]+)/g, 'account: "$1"')
+    result = result.replace(/HashValue\(([0-9a-zA-Z]+)\)/g, '"$1"')
+    result = this.replaceAll(result, '\\\"', '"')
+  
+    // Add string quote to key
+    result = result.replace(/([0-9a-zA-Z_]+):/g, '"$1":')
+
+    return result
+  }
 }
 
 module.exports = Libra
