@@ -3,6 +3,7 @@ require('dotenv').config()
 const bodyParser = require('body-parser')
 const express = require('express')
 const Libra = require('./libra_service.js')
+const Faucent = require('./faucet.js')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -64,6 +65,27 @@ app.post('/transactionHistory', async function (req, res) {
   console.log(`query transaction event ${event}`)
   res.send(transactions)
 })
+
+app.post('/mint', async function (req, res) {
+  try {
+    console.log('req body', req.body)
+    const faucent = new Faucent()
+    
+    const address = req.body.address
+    const amount = req.body.amount
+    console.log(`Minting amount ${amount}`)
+    await faucent.getFaucetFromKulap(amount, address)
+
+    res.send({
+      address: address,
+      amount: amount
+    })
+
+  } catch (error) {
+    console.error(error)
+  }
+})
+
 
 app.listen(PORT, HOST, () => {
   console.log(`Server is running on ${HOST} PORT: ${PORT}`)
