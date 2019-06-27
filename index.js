@@ -9,8 +9,6 @@ const PORT = process.env.PORT || 3000
 const HOST = process.env.HOST || 'localhost'
 const AMOUNT_TO_MINT = process.env.AMOUNT_TO_MINT || 100
 
-const libra = new Libra()
-
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -26,6 +24,8 @@ app.get('/', function (req, res) {
 
 app.post('/createWallet', async function (req, res) {
   console.log('req body', req.body)
+  const libra = new Libra()
+
   let wallet = await libra.createAccount(AMOUNT_TO_MINT)
   console.log('wallet', wallet)
   res.send(wallet)
@@ -33,6 +33,8 @@ app.post('/createWallet', async function (req, res) {
 
 app.post('/getBalance', async function (req, res) {
   console.log('req body', req.body)
+  const libra = new Libra()
+
   let address = req.body.address
   let wallet = await libra.getBalance(address)
   console.log('wallet', wallet)
@@ -41,6 +43,8 @@ app.post('/getBalance', async function (req, res) {
 
 app.post('/transfer', async function (req, res) {
   console.log('req body', req.body)
+  const libra = new Libra()
+
   let fromAddress = req.body.fromAddress
   let mnemonic = req.body.mnemonic
   let toAddress = req.body.toAddress
@@ -52,6 +56,8 @@ app.post('/transfer', async function (req, res) {
 
 app.post('/transactionHistory', async function (req, res) {
   console.log('req body', req.body)
+  const libra = new Libra()
+  
   const address = req.body.address
   const event = req.body.event
   const transactions = await libra.queryTransaction(address, event)
