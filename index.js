@@ -50,6 +50,15 @@ app.post('/transfer', async function (req, res) {
   res.send(wallet)
 })
 
+app.post('/transactionHistory', async function (req, res) {
+  console.log('req body', req.body)
+  const address = req.body.address
+  const event = req.body.event
+  const transactions = await libra.queryTransaction(address, event)
+  console.log(`query transaction event ${event}`)
+  res.send(transactions)
+})
+
 app.listen(PORT, HOST, () => {
   console.log(`Server is running on ${HOST} PORT: ${PORT}`)
 })
