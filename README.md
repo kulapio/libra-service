@@ -142,7 +142,7 @@ curl --location --request POST "https://libraservice2.kulap.io/mint" \
 ```
 
 # Postman
-[Play on your postman](https://documenter.getpostman.com/view/1671913/S1a32SZ5?version=latest)
+[https://documenter.getpostman.com/view/1671913/S1a32SZ5?version=latest](https://documenter.getpostman.com/view/1671913/S1a32SZ5?version=latest)
 
 # Contributors
 
