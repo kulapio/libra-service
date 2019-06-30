@@ -29,6 +29,20 @@ AMOUNT_TO_MINT=100
 DOCKER_IMAGE=kulap/libra_client:0.1
 ```
 
+# Endpoints
+Create Wallet:
+
+`POST /createWallet`  
+Headers: `Content-Typeapplication/json`  
+Body: `{}`
+  
+Example Request: 
+``` 
+curl --location --request POST "https://libraservice2.kulap.io/createWallet" \
+  --header "Content-Type: application/json" \
+  --data "{}"
+```
+
 # Contributors
 - Tot (Kulap.io, https://github.com/totiz)
 - Big (Kulap.io, https://github.com/biigpongsatorn)
