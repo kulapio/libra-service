@@ -30,7 +30,8 @@ DOCKER_IMAGE=kulap/libra_client:0.1
 ```
 
 # Endpoints
-Create Wallet:
+
+### Create Wallet:
 
 `POST /createWallet`  
 Headers: `Content-Typeapplication/json`  
@@ -41,6 +42,25 @@ Example Request:
 curl --location --request POST "https://libraservice2.kulap.io/createWallet" \
   --header "Content-Type: application/json" \
   --data "{}"
+```
+
+### Get Balance:
+
+`POST /getBalance`  
+Headers: `Content-Typeapplication/json`  
+Body: 
+
+| Key            | Description                                                       | Required   |
+| -------------- | ----------------------------------------------------------------- | ---------- |
+| `adress`       | Libra's wallet address                                            | yes        |
+  
+Example Request: 
+``` 
+curl --location --request POST "https://libraservice2.kulap.io/getBalance" \
+  --header "Content-Type: application/json" \
+  --data "{
+	\"address\": \"87b647a009b06483be7a47296b6182294c71eced58837e8043a1f54fdb71d1ee\"
+}"
 ```
 
 # Contributors
