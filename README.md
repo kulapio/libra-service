@@ -31,20 +31,20 @@ DOCKER_IMAGE=kulap/libra_client:0.1
 
 # Endpoints
 
-### Create Wallet:
+### Create wallet:
 
 `POST /createWallet`  
 Headers: `Content-Typeapplication/json`  
 Body: `{}`
   
-Example Request: 
+##### Example Request: 
 ``` 
 curl --location --request POST "https://libraservice2.kulap.io/createWallet" \
   --header "Content-Type: application/json" \
   --data "{}"
 ```
 
-### Get Balance:
+### Get balance:
 
 `POST /getBalance`  
 Headers: `Content-Typeapplication/json`  
@@ -54,7 +54,7 @@ Body:
 | -------------- | ----------------------------------------------------------------- | ---------- |
 | `adress`       | Libra's wallet address                                            | yes        |
   
-Example Request: 
+##### Example Request: 
 ``` 
 curl --location --request POST "https://libraservice2.kulap.io/getBalance" \
   --header "Content-Type: application/json" \
@@ -76,7 +76,7 @@ Body:
 | `toAddress`    | Receiver Libra's wallet address                                   | yes        |
 | `amount`       | Amount of Libra coins to transfer                                 | yes        |
   
-Example Request: 
+##### Example Request: 
 ``` 
 curl --location --request POST "https://libraservice2.kulap.io/transfer" \
   --header "Content-Type: application/json" \
@@ -100,7 +100,7 @@ Body:
 | `mint`         | Amount of mint coins                                              | yes        |
 
   
-Example Request: 
+##### Example Request: 
 ``` 
 curl --location --request POST "https://libraservice2.kulap.io/mint" \
   --header "Content-Type: application/json" \
