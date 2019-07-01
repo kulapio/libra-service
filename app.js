@@ -59,9 +59,8 @@ app.post('/transactionHistory', async (req, res) => {
   const libra = new Libra()
 
   const address = req.body.address
-  const event = req.body.event
-  const transactions = await libra.queryTransaction(address, event)
-  console.log(`query transaction event ${event}`)
+  const transactions = await libra.queryTransaction(address)
+  console.log(`query transaction wallet ${address}`)
   res.send(transactions)
 })
 
