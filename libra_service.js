@@ -34,6 +34,8 @@ class Libra {
     this.amountToTransfer = ''
 
     // Transaction
+    this.sent_events_count = 0
+    this.received_events_count = 0
     this.transactionRaw = []
     this.transactionVersion = []
     this.transactionObject = []
@@ -103,25 +105,18 @@ class Libra {
     }
   }
 
-  async queryTransaction(address) {
+  async queryTransaction(address, event) {
     this.userAddress = address
-    const sourceReceived = this.runLibraCli()
+    const source = this.runLibraCli()
 
-    // Generate new container name for sourceSent, fix conflict container same name
-    this.containerName = await this.randomContainerName()
-    const sourceSent = this.runLibraCli()
+    // serialize sent/received transaction data
+    this.queryTransactionWriteToWritable(source.stdin, event)
+    await this.libraCliReadableTransaction(source.stdout, event)
+    console.log('transactionRaw', this.transactionRaw)
 
-    // serialize received transaction data
-    await this.queryTransactionWriteToWritable(sourceReceived.stdin, 'received')
-    await this.libraCliReadableTransaction(sourceReceived.stdout)
     await this.extractTransactionVersion()
-    await this.serializeDataFromExplorer('received')
-
-    // serialize sent transaction data
-    await this.queryTransactionWriteToWritable(sourceSent.stdin, 'sent')
-    await this.libraCliReadableTransaction(sourceSent.stdout)
-    await this.extractTransactionVersion()
-    await this.serializeDataFromExplorer('sent')
+    console.log('transactionVersion', this.transactionVersion)
+    await this.serializeDataFromExplorer(event)
 
     // Sort by transaction version desc
     this.transactionObject = this.transactionObject.sort((a, b) => {
@@ -173,10 +168,23 @@ class Libra {
 
   async queryTransactionWriteToWritable(writable, event) {
     await sleep(2000)
-    await streamWrite(writable, `query event ${this.userAddress} ${event} 0 true 10\n`);
+    await streamWrite(writable, `query account_state ${this.userAddress}\n`)
     await sleep(1000)
+    if (event === 'sent') {
+      console.log('sent_events_count', this.sent_events_count)
+      if (this.sent_events_count > 0) {
+        console.log(`query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 10\n`)
+        await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 10\n`)
+        await sleep(1000)
+      }
+    } else {
+      if (this.received_events_count > 0) {
+        await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.received_events_count - 1} false 10\n`)
+        await sleep(1000)
+      }
+    }
 
-    await streamWrite(writable, 'quit\n');
+    await streamWrite(writable, 'quit\n')
   }
 
   async transferWriteToWritable(writable) {
@@ -217,8 +225,18 @@ class Libra {
     let splitLine = 0
 
     for await (const line of chunksToLinesAsync(readable)) {
+      // Send event count
+      if (-1 != line.search("sent_events_count: ")) {
+        this.sent_events_count = parseInt(line.split('sent_events_count: ')[1].replace(',', '').replace('\n', ''))
+        console.log('sent_events_count: ' + this.sent_events_count)
+
+      // Received event count
+      } else if (-1 != line.search("received_events_count: ")) {
+        this.received_events_count = parseInt(line.split('received_events_count: ')[1].replace(',', '').replace('\n', ''))
+        console.log('received_events_count: ' + this.received_events_count)
+
       // If found EventWithProof set splitLine
-      if (-1 != line.search("EventWithProof {")) {
+      } else if (-1 != line.search("EventWithProof {")) {
         splitLine = currentLine + 5
       }
 
@@ -280,55 +298,57 @@ class Libra {
     this.transactionRaw = []
   }
 
-  serializeDataFromExplorer(event) {
-    this.transactionVersion.forEach(async (version) => {
-      await JSDOM.fromURL(`https://librabrowser.io/version/${version}`).then(resp => {
-        const dom = new JSDOM(resp.serialize());
-        const tbody = dom.window.document.querySelector('tbody').innerHTML
-        const match = tbody.match(/<tr[\s\S]*?<\/tr>/g)
+  async serializeDataFromExplorer(event) {
+    for await (const version of this.transactionVersion) {
+      const url = `https://librabrowser.io/version/${version}`
+      console.log('calling ' + url)
+      const resp = await JSDOM.fromURL(url)
 
-        // transaction version
-        // let transactionVersionDom = match[0].split('</td>')
-        // transactionVersionDom = transactionVersionDom[1].match(/<td>(.*)/)
-        // const transactionVersion = Number(transactionVersionDom[1])
+      const dom = new JSDOM(resp.serialize());
+      const tbody = dom.window.document.querySelector('tbody').innerHTML
+      const match = tbody.match(/<tr[\s\S]*?<\/tr>/g)
 
-        // expiration time
-        let expirationTimeDom = match[1].split('</td>')
-        expirationTimeDom = expirationTimeDom[1].match(/<td>(.*)/)
-        const expirationTime = expirationTimeDom[1]
+      // transaction version
+      // let transactionVersionDom = match[0].split('</td>')
+      // transactionVersionDom = transactionVersionDom[1].match(/<td>(.*)/)
+      // const transactionVersion = Number(transactionVersionDom[1])
 
-        // source address
-        let sourceDom = match[2].split('</td>')
-        sourceDom = sourceDom[1].match(/<a .*>(.*)<\/a>/)
-        const source = sourceDom[1]
+      // expiration time
+      let expirationTimeDom = match[1].split('</td>')
+      expirationTimeDom = expirationTimeDom[1].match(/<td>(.*)/)
+      const expirationTime = expirationTimeDom[1]
 
-        // destination address
-        let destinationDom = match[3].split('</td>')
-        destinationDom = destinationDom[1].match(/<a .*>(.*)<\/a>/)
-        const destination = destinationDom[1]
+      // source address
+      let sourceDom = match[2].split('</td>')
+      sourceDom = sourceDom[1].match(/<a .*>(.*)<\/a>/)
+      const source = sourceDom[1]
 
-        // type
-        let typeDom = match[4].split('</td>')
-        typeDom = typeDom[1].match(/<td>(.*)/)
-        const type = typeDom[1]
+      // destination address
+      let destinationDom = match[3].split('</td>')
+      destinationDom = destinationDom[1].match(/<a .*>(.*)<\/a>/)
+      const destination = destinationDom[1]
 
-        // amount transferred
-        let amountDom = match[5].split('</td>')
-        amountDom = amountDom[1].match(/<td>(.*) Libra/)
-        const amount = parseFloat(amountDom[1])
+      // type
+      let typeDom = match[4].split('</td>')
+      typeDom = typeDom[1].match(/<td>(.*)/)
+      const type = typeDom[1]
 
-        this.transactionObject.push({
-          event: event,
-          type: type,
-          amount: amount,
-          fromAddress: source,
-          toAddress: destination,
-          date: expirationTime,
-          transactionVersion: version,
-          explorerLink: `https://librabrowser.io/version/${version}`
-        })
+      // amount transferred
+      let amountDom = match[5].split('</td>')
+      amountDom = amountDom[1].match(/<td>(.*) Libra/)
+      const amount = parseFloat(amountDom[1])
+
+      this.transactionObject.push({
+        event: event,
+        type: type,
+        amount: amount,
+        fromAddress: source,
+        toAddress: destination,
+        date: expirationTime,
+        transactionVersion: version,
+        explorerLink: `https://librabrowser.io/version/${version}`
       })
-    })
+    }
 
     this.transactionVersion = []
   }

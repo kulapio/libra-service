@@ -56,12 +56,28 @@ app.post('/transfer', async (req, res) => {
 
 app.post('/transactionHistory', async (req, res) => {
   console.log('req body', req.body)
-  const libra = new Libra()
-
   const address = req.body.address
-  const transactions = await libra.queryTransaction(address)
+
+  // Sent
+  const sentLibra = new Libra()
+  const sentTransactions = await sentLibra.queryTransaction(address, 'sent')
+
+  // Received
+  const receivedLibra = new Libra()
+  const receivedTransactions = await receivedLibra.queryTransaction(address, 'received')
+
+  // Merge
+  let transactions = sentTransactions.transactions.concat(receivedTransactions.transactions)
+  
+  // Sort by transaction version desc
+  transactions = transactions.sort((a, b) => {
+    return b.transactionVersion - a.transactionVersion
+  })
+
   console.log(`query transaction wallet ${address}`)
-  res.send(transactions)
+  res.send({
+    transactions: transactions
+  })
 })
 
 app.post('/mint', async (req, res) => {
