@@ -123,6 +123,11 @@ class Libra {
     await this.extractTransactionVersion()
     await this.serializeDataFromExplorer('sent')
 
+    // Sort by transaction version desc
+    this.transactionObject = this.transactionObject.sort((a, b) => {
+      return b.transactionVersion - a.transactionVersion
+    })
+
     return {
       transactions: this.transactionObject
     }
