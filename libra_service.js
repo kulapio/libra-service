@@ -173,8 +173,8 @@ class Libra {
     if (event === 'sent') {
       console.log('sent_events_count', this.sent_events_count)
       if (this.sent_events_count > 0) {
-        console.log(`query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 10\n`)
-        await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 10\n`)
+        console.log(`query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 5\n`)
+        await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 5\n`)
         await sleep(1000)
       }
     } else {
