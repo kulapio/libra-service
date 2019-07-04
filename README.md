@@ -1,18 +1,22 @@
-# Docs
+Docs
+----
 
 - [The First Libra Wallet POC— Building your own Wallet and APIs](https://medium.com/kulapofficial/the-first-libra-wallet-poc-building-your-own-wallet-and-apis-3cb578c0bd52?postPublishedType=repub)
 
-# Architect
+Architect
+---------
 
 ![Libra Wallet Service Architect](https://cdn-images-1.medium.com/max/1600/1*bpTSkmetebvE-icm_1xuVg.png)
 To build that APIs we need shell interactive that can send requests to Libra-cli so we use Node.js with child_process and rauschma/stringio libs to run a Libra-cli container every time when the user makes a request (stateless).
 
-# Required
+Required
+--------
 
 - node 10.15.3
 - docker
 
-# Install
+Install
+-------
 
 ```shell
 # Download source
@@ -28,7 +32,8 @@ npm i
 cp .env.example .env
 ```
 
-# Config
+Config
+------
 
 ```
 PORT=3000
@@ -38,29 +43,34 @@ DOCKER_IMAGE=kulap/libra_client:0.1
 USE_KULAP_FAUCET=true
 ```
 
-# Run
+Run
+---
 
 ```shell
 npm run start
 ```
 
-# Develop
+Develop
+-------
 
 ```shell
 npm run dev
 ```
 
-# Test
+Test
+----
 
 ```shell
 npm test
 ```
 
-# Warning
+Warning
+-------
 
 - Not production ready.
 
-# Endpoints
+Endpoints
+---------
 
 ### Create wallet:
 
@@ -141,10 +151,12 @@ curl --location --request POST "https://libraservice2.kulap.io/mint" \
 }"
 ```
 
-# Postman
+Postman
+-------
 [https://documenter.getpostman.com/view/1671913/S1a32SZ5?version=latest](https://documenter.getpostman.com/view/1671913/S1a32SZ5?version=latest)
 
-# Contributors
+Contributors
+------------
 
 - Tot (Kulap.io, https://github.com/totiz)
 - Big (Kulap.io, https://github.com/biigpongsatorn)
@@ -152,3 +164,14 @@ curl --location --request POST "https://libraservice2.kulap.io/mint" \
 - Bank (https://github.com/zent-bank)
 - Suraneti (https://github.com/suraneti)
 - Katopz (FoxFox.io, https://github.com/katopz)
+
+License
+-------
+
+Libra Service is released under the terms of the MIT license. See [LICENSE](LICENSE) for more
+information or see https://opensource.org/licenses/MIT.
+
+Contributing
+------------
+
+Contributions are welcome, feel free to fork and pull request.
