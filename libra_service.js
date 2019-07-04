@@ -1,8 +1,9 @@
 require('dotenv').config()
 const { streamWrite, streamEnd, onExit, chunksToLinesAsync, chomp } = require('@rauschma/stringio')
+const util = require('util')
 const { spawn } = require('child_process')
+const exec = util.promisify(require('child_process').exec)
 const { JSDOM } = require("jsdom")
-const shell = require('shelljs')
 const Faucent = require('./faucet.js')
 const USE_KULAP_FAUCET = process.env.USE_KULAP_FAUCET === 'true'
 
@@ -152,7 +153,9 @@ class Libra {
     // console.log(`writing to /${this.userAddress}`)
     // await streamWrite(writable, `account write /wallet_data/${this.userAddress}\n`);
     await sleep(2000)
-    this.mnemonic = shell.exec(`docker exec -i ${this.containerName} cat /client.mnemonic`).stdout.replace('\n', '').replace(';0', ';1'); // :1 to tell libra-cli when loaded later that we have 1 account here
+    const shellOutput = await exec(`docker exec -i ${this.containerName} cat /client.mnemonic`)
+    console.log('shellOutput', shellOutput)
+    this.mnemonic = shellOutput.stdout.replace('\n', '').replace(';0', ';1'); // :1 to tell libra-cli when loaded later that we have 1 account here
     console.log('mnemonic', this.mnemonic)
 
     await streamWrite(writable, 'quit\n');
@@ -190,7 +193,9 @@ class Libra {
   async transferWriteToWritable(writable) {
     await sleep(2000)
     // Save mnemonic to file
-    const saveResult = shell.exec(`docker exec -i ${this.containerName} bash -c  "echo '${this.mnemonic}' > /user_mnemonic"`).stdout
+    const shellOutput = await exec(`docker exec -i ${this.containerName} bash -c  "echo '${this.mnemonic}' > /user_mnemonic"`)
+    console.log('shellOutput', shellOutput)
+    const saveResult = shellOutput.stdout
     console.log('saveResult', saveResult)
 
     await streamWrite(writable, 'account recover /user_mnemonic \n');
