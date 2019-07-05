@@ -110,16 +110,17 @@ describe('Test service (online)', () => {
       // Transfer A -> B 25 coins
       await post('/transfer', {toAddress: walletB.body.address, mnemonic: walletA.body.mnemonic, amount: 25}).expect(200)
       console.log('tx 1')
+      await sleep(500)
 
       // Transfer B -> A 57 coins
       await post('/transfer', {toAddress: walletA.body.address, mnemonic: walletB.body.mnemonic, amount: 57}).expect(200)
       console.log('tx 2')
+      await sleep(500)
 
       // Transfer A -> B 10 coins
       await post('/transfer', {toAddress: walletB.body.address, mnemonic: walletA.body.mnemonic, amount: 10}).expect(200)
       console.log('tx 3')
-
-      sleep(5000)
+      await sleep(500)
 
       // Get transaction history
       const response = await post('/transactionHistory', {address: walletA.body.address}).expect(200)
@@ -131,7 +132,7 @@ describe('Test service (online)', () => {
       expect(transactions[0].event).toEqual('sent')
       expect(transactions[0].fromAddress).toEqual(walletA.body.address)
       expect(transactions[0].toAddress).toEqual(walletB.body.address)
-      expect(transactions[0].amount).toEqual(10)
+      expect(transactions[0].amount).toEqual("10")
       expect(transactions[0].transactionVersion.toString(10)).toMatch(/([0-9])/)
 
       // tx 1
@@ -139,7 +140,7 @@ describe('Test service (online)', () => {
       expect(transactions[1].event).toEqual('received')
       expect(transactions[1].fromAddress).toEqual(walletB.body.address)
       expect(transactions[1].toAddress).toEqual(walletA.body.address)
-      expect(transactions[1].amount).toEqual(57)
+      expect(transactions[1].amount).toEqual("57")
       expect(transactions[1].transactionVersion.toString(10)).toMatch(/([0-9])/)
 
       // tx 2
@@ -147,7 +148,7 @@ describe('Test service (online)', () => {
       expect(transactions[2].event).toEqual('sent')
       expect(transactions[2].fromAddress).toEqual(walletA.body.address)
       expect(transactions[2].toAddress).toEqual(walletB.body.address)
-      expect(transactions[2].amount).toEqual(25)
+      expect(transactions[2].amount).toEqual("25")
       expect(transactions[2].transactionVersion.toString(10)).toMatch(/([0-9])/)
 
     },
