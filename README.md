@@ -181,7 +181,7 @@ curl --location --request POST "https://libraservice2.kulap.io/mint" \
 ```json
 {
     "address": "f80d5187740a76e3154ec6a24628b40a82040e71e76bdb4c1fac325fcdd73dcc",
-    "amount": 100
+    "amount": "100"
 }
 ```
 
