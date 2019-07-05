@@ -188,7 +188,6 @@ class Libra {
     await streamWrite(writable, `query account_state ${this.userAddress}\n`)
     await sleep(1000)
     if (event === 'sent') {
-      console.log('sent_events_count', this.sent_events_count)
       if (this.sent_events_count > 0) {
         console.log(`query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 5\n`)
         await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 5\n`)
@@ -196,6 +195,7 @@ class Libra {
       }
     } else {
       if (this.received_events_count > 0) {
+        console.log(`query event ${this.userAddress} ${event} ${this.received_events_count - 1} false 10\n`)
         await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.received_events_count - 1} false 10\n`)
         await sleep(1000)
       }
@@ -243,6 +243,7 @@ class Libra {
         this.balance = line.split('Balance is: ')[1].replace('\n', '')
         console.log('Your balance: ' + this.balance)
       }
+
       console.log('LINE: ' + chomp(line))
     }
   }
@@ -285,13 +286,13 @@ class Libra {
 
       // Concat array string when currentLine equal splitLine
       if ((currentLine !== 0 && splitLine !== 0) && (currentLine === splitLine)) {
-        let transactionText = await this.convertTransactionResultToJson(transaction.join(''))
+        const transactionText = await this.convertTransactionResultToJson(transaction.join(''))
         this.transactionRaw.push(JSON.parse(transactionText))
         transaction = []
       }
 
       // Increase currentLine each loop
-      currentLine = currentLine + 1
+      currentLine += 1
       console.log(`LINE: ${chomp(line)}`)
     }
   }
