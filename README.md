@@ -85,6 +85,15 @@ curl --location --request POST "https://libraservice2.kulap.io/createWallet" \
   --data "{}"
 ```
 
+##### Example Output: 
+```json
+{
+    "address": "5554d60c1af7592673f0ac012ce483b842c06de3d896029cfe957c348621d5b7",
+    "balance": "100",
+    "mnemonic": "parrot afraid always popular trade grape divide wave dawn web identify kangaroo equal suffer humor creek scan stove hip kingdom skin enable flush announce;1"
+}
+```
+
 ### Get balance:
 
 `POST /getBalance`  
@@ -104,6 +113,14 @@ curl --location --request POST "https://libraservice2.kulap.io/getBalance" \
 }"
 ```
 
+##### Example Output: 
+```json
+{
+    "address": "87b647a009b06483be7a47296b6182294c71eced58837e8043a1f54fdb71d1ee",
+    "balance": "1000000123"
+}
+```
+
 ### Transfer:
 
 `POST /transfer`  
@@ -112,7 +129,7 @@ Body:
 
 | Key            | Description                                                       | Required   |
 | -------------- | ----------------------------------------------------------------- | ---------- |
-| `fromAddress`  | Sender Libra's wallet address                                     | yes        |
+| `fromAddress`  | Sender Libra's wallet address                                     | no         |
 | `mnemonic`     | Mnemonic phrase                                                   | yes        |
 | `toAddress`    | Receiver Libra's wallet address                                   | yes        |
 | `amount`       | Amount of Libra coins to transfer                                 | yes        |
@@ -127,6 +144,15 @@ curl --location --request POST "https://libraservice2.kulap.io/transfer" \
 	\"toAddress\": \"31c7092554bb804a4e25bd24399859428404c28cbc3b44dea5dc2a9f2314144b\",
 	\"amount\": \"11\"
 }"
+```
+
+##### Example Output: 
+```json
+{
+    "address": "3299692e5e635fa2473924177955b3be1e451efc3c03edd212de85c1070a6312",
+    "toAddress": "31c7092554bb804a4e25bd24399859428404c28cbc3b44dea5dc2a9f2314144b",
+    "amount": "11"
+}
 ```
 
 ### Mint:
@@ -149,6 +175,14 @@ curl --location --request POST "https://libraservice2.kulap.io/mint" \
 	\"address\": \"f80d5187740a76e3154ec6a24628b40a82040e71e76bdb4c1fac325fcdd73dcc\",
 	\"amount\": 1000
 }"
+```
+
+##### Example Output: 
+```json
+{
+    "address": "f80d5187740a76e3154ec6a24628b40a82040e71e76bdb4c1fac325fcdd73dcc",
+    "amount": 100
+}
 ```
 
 Postman
