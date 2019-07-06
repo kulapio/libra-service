@@ -112,7 +112,7 @@ class Libra {
       return {
         event: event,
         type: transaction.type,
-        amount: BigNumber(transaction.event.event_data.amount).div(10**6).toString(10),
+        amount: BigNumber(transaction.event.event_data.amount).div(1e6).toString(10),
         fromAddress: ('sent' === event) ? transaction.event.access_path.address  : transaction.event.event_data.account,
         toAddress: ('sent' === event) ? transaction.event.event_data.account : transaction.event.access_path.address,
         date: moment.utc(transaction.expiration_time*1000).format(),
