@@ -6,7 +6,7 @@ const exec = util.promisify(require('child_process').exec)
 const Faucent = require('./faucet.js')
 const moment = require('moment')
 const BigNumber = require('bignumber.js');
-const USE_KULAP_FAUCET = process.env.USE_KULAP_FAUCET === 'true'
+const USE_KULAP_FAUCET = (undefined === process.env.USE_KULAP_FAUCET) ? true : process.env.USE_KULAP_FAUCET === 'true'
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
