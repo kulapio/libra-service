@@ -3,8 +3,8 @@ const AMOUNT_TO_MINT = process.env.AMOUNT_TO_MINT || 100
 const express = require('express')
 const bodyParser = require('body-parser')
 
-const Libra = require('./libra_service')
-const Faucent = require('./faucet')
+const Libra = require('./service/libra_docker')
+const Faucent = require('./service/faucet')
 
 const app = express()
 app.use(bodyParser.json())
