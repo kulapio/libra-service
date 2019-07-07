@@ -191,7 +191,7 @@ class Libra {
     const eventCount = event === 'sent' ? this.sent_events_count : this.received_events_count
 
     if (eventCount > 0) {
-      const queryLimit = event === 'sent' ? 5 : 10
+      const queryLimit = 5
       const queryCommand = `query event ${this.userAddress} ${event} ${eventCount - 1} false ${queryLimit}\n`
 
       console.log(queryCommand)
