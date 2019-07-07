@@ -112,10 +112,10 @@ class Libra {
       return {
         event: event,
         type: transaction.type,
-        amount: BigNumber(transaction.event.event_data.amount).div(10**6).toString(10),
-        fromAddress: ('sent' === event) ? transaction.event.access_path.address  : transaction.event.event_data.account,
+        amount: BigNumber(transaction.event.event_data.amount).div(10 ** 6).toString(10),
+        fromAddress: ('sent' === event) ? transaction.event.access_path.address : transaction.event.event_data.account,
         toAddress: ('sent' === event) ? transaction.event.event_data.account : transaction.event.access_path.address,
-        date: moment.utc(transaction.expiration_time*1000).format(),
+        date: moment.utc(transaction.expiration_time * 1000).format(),
         transactionVersion: transaction.transaction_version,
         explorerLink: `https://librabrowser.io/version/${transaction.transaction_version}`
       }
@@ -187,18 +187,16 @@ class Libra {
     await sleep(2000)
     await streamWrite(writable, `query account_state ${this.userAddress}\n`)
     await sleep(1000)
-    if (event === 'sent') {
-      if (this.sent_events_count > 0) {
-        console.log(`query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 5\n`)
-        await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.sent_events_count - 1} false 5\n`)
-        await sleep(1000)
-      }
-    } else {
-      if (this.received_events_count > 0) {
-        console.log(`query event ${this.userAddress} ${event} ${this.received_events_count - 1} false 10\n`)
-        await streamWrite(writable, `query event ${this.userAddress} ${event} ${this.received_events_count - 1} false 10\n`)
-        await sleep(1000)
-      }
+
+    const eventCount = event === 'sent' ? this.sent_events_count : this.received_events_count
+
+    if (eventCount > 0) {
+      const queryLimit = event === 'sent' ? 5 : 10
+      const queryCommand = `query event ${this.userAddress} ${event} ${eventCount - 1} false ${queryLimit}\n`
+
+      console.log(queryCommand)
+      await streamWrite(writable, queryCommand)
+      await sleep(1000)
     }
 
     // Query txn_range to get expiration_time and transactionType
@@ -259,22 +257,22 @@ class Libra {
         this.sent_events_count = parseInt(line.split('sent_events_count: ')[1].replace(',', '').replace('\n', ''))
         console.log('sent_events_count: ' + this.sent_events_count)
 
-      // Received event count
+        // Received event count
       } else if (-1 != line.search("received_events_count: ")) {
         this.received_events_count = parseInt(line.split('received_events_count: ')[1].replace(',', '').replace('\n', ''))
         console.log('received_events_count: ' + this.received_events_count)
 
-      // Expiration time
+        // Expiration time
       } else if (-1 != line.search("expiration_time: ")) {
         this.expiration_time = parseInt(line.split('expiration_time: ')[1].replace(',', '').replace('\n', ''))
         console.log('expiration_time: ' + this.received_events_count)
 
-      // Transaction type
+        // Transaction type
       } else if (-1 != line.search("transaction: ")) {
         this.transactionType = line.split('transaction: ')[1].split(',')[0]
         console.log('transactionType: ' + this.transactionType)
 
-      // If found EventWithProof set splitLine
+        // If found EventWithProof set splitLine
       } else if (-1 != line.search("EventWithProof {")) {
         splitLine = currentLine + 5
       }
