@@ -1,3 +1,6 @@
+require('dotenv').config()
+const AMOUNT_TO_MINT = process.env.AMOUNT_TO_MINT || 100
+
 const request = require('supertest')
 const app = require('../app')
 
@@ -31,7 +34,7 @@ describe('Test service (online)', () => {
       expect(balance).toMatch(/([0-9])/)
       expect(mnemonic.split(' ').length).toEqual(24)
     },
-    10000
+    20000
   )
 
   it(
@@ -42,7 +45,7 @@ describe('Test service (online)', () => {
 
       expect(balance).toMatch(/([0-9])/)
     },
-    10000
+    20000
   )
 
   it(
@@ -58,6 +61,8 @@ describe('Test service (online)', () => {
       const response = await post('/mint', {address: address, amount: mintingAmount}).expect(200)
       expect(response.body.address).toMatch(/([a-z0-9])/)
       expect(response.body.amount.toString(10)).toMatch(/([0-9])/)
+
+      await sleep(500)
 
       // Balance after
       const balanceAfter = await post('/getBalance', {address: address}).expect(200)
@@ -79,7 +84,7 @@ describe('Test service (online)', () => {
       const createResponse = await post('/createWallet').expect(200)
 
       // Mint with 100 coins
-      const amountOnCreatedWallet = 100
+      const amountOnCreatedWallet = AMOUNT_TO_MINT
       await post('/mint', {address: createResponse.body.address, amount: mintingAmount}).expect(200)
 
       // Transfer
@@ -88,6 +93,8 @@ describe('Test service (online)', () => {
       expect(response.body.toAddress).toMatch(/([a-z0-9])/)
       expect(response.body.amount.toString(10)).toMatch(/([0-9])/)
       expect(response.body.amount.toString(10)).toEqual(transferAmount.toString(10))
+
+      await sleep(500)
 
       // Balance after
       const balanceAfter = await post('/getBalance', {address: createResponse.body.address}).expect(200)

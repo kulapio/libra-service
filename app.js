@@ -1,10 +1,13 @@
+require('dotenv').config()
 const AMOUNT_TO_MINT = process.env.AMOUNT_TO_MINT || 100
 
 const express = require('express')
 const bodyParser = require('body-parser')
 
-const Libra = require('./service/libra_docker')
+const LibraService = require('./service/libra_service')
+const LibraDocker = require('./service/libra_docker')
 const Faucent = require('./service/faucet')
+const USE_KULAP_FAUCET = (undefined === process.env.USE_KULAP_FAUCET) ? true : process.env.USE_KULAP_FAUCET === 'true'
 
 const app = express()
 app.use(bodyParser.json())
@@ -24,32 +27,56 @@ app.get('/', (req, res) => {
 
 app.post('/createWallet', async (req, res) => {
   console.log('req body', req.body)
-  const libra = new Libra()
+  const libra = new LibraService()
 
-  let wallet = await libra.createAccount(AMOUNT_TO_MINT)
+  // Create wallet
+  const createdResult = await libra.createWallet(AMOUNT_TO_MINT)
+
+  // Mint
+  const faucent = new Faucent()
+  if (USE_KULAP_FAUCET) {
+    await faucent.getFaucetFromKulap(AMOUNT_TO_MINT, createdResult.address)
+  } else {
+    await faucent.getFaucetFromLibraTestnet(AMOUNT_TO_MINT, createdResult.address)
+  }
+
+  const wallet = {
+    address: createdResult.address,
+    mnemonic: createdResult.mnemonic + ';1',
+    balance: AMOUNT_TO_MINT.toString(10)
+  }
   console.log('wallet', wallet)
   res.send(wallet)
 })
 
 app.post('/getBalance', async (req, res) => {
   console.log('req body', req.body)
-  const libra = new Libra()
+  const libra = new LibraService()
 
-  let address = req.body.address
-  let wallet = await libra.getBalance(address)
+  const address = req.body.address
+  const balance = await libra.queryBalance(address)
+  const wallet = {
+    address: address,
+    balance: balance
+  }
   console.log('wallet', wallet)
   res.send(wallet)
 })
 
 app.post('/transfer', async (req, res) => {
   console.log('req body', req.body)
-  const libra = new Libra()
+  const libra = new LibraService()
 
-  let fromAddress = req.body.fromAddress
-  let mnemonic = req.body.mnemonic
-  let toAddress = req.body.toAddress
-  let amount = req.body.amount
-  let wallet = await libra.transfer(fromAddress, mnemonic, toAddress, amount)
+  // let fromAddress = req.body.fromAddress
+  const mnemonic = req.body.mnemonic.split(';')[0]
+  const toAddress = req.body.toAddress
+  const amount = req.body.amount
+  const result = await libra.transfer(mnemonic, toAddress, amount)
+  const wallet = {
+    address: result.address,
+    toAddress: toAddress,
+    amount: amount
+  }
   console.log('wallet', wallet)
   res.send(wallet)
 })
@@ -59,11 +86,11 @@ app.post('/transactionHistory', async (req, res) => {
   const address = req.body.address
 
   // Sent
-  const sentLibra = new Libra()
+  const sentLibra = new LibraDocker()
   const sentTransactions = await sentLibra.queryTransaction(address, 'sent')
 
   // Received
-  const receivedLibra = new Libra()
+  const receivedLibra = new LibraDocker()
   const receivedTransactions = await receivedLibra.queryTransaction(address, 'received')
 
   // Merge
@@ -88,7 +115,11 @@ app.post('/mint', async (req, res) => {
     const address = req.body.address
     const amount = req.body.amount
     console.log(`Minting amount ${amount}`)
-    await faucent.getFaucetFromKulap(amount, address)
+    if (USE_KULAP_FAUCET) {
+      await faucent.getFaucetFromKulap(amount, address)
+    } else {
+      await faucent.getFaucetFromLibraTestnet(amount, address)
+    }
 
     res.send({
       address: address,
