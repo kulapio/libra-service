@@ -3,6 +3,9 @@
   "version": "1.1.0",
   "description": "Libra Service",
   "main": "index.js",
+  "engines": {
+    "node": ">=12.0.0"
+  },
   "scripts": {
     "test": "jest",
     "test-dev": "jest --watchAll",
@@ -20,7 +23,8 @@
     "body-parser": "^1.19.0",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
-    "moment": "^2.24.0"
+    "moment": "^2.24.0",
+    "libra-core": "^1.0.2"
   },
   "devDependencies": {
     "jest": "^24.8.0",
