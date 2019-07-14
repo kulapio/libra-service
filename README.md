@@ -39,7 +39,7 @@ Config
 PORT=3000
 HOST=localhost
 AMOUNT_TO_MINT=100
-DOCKER_IMAGE=kulap/libra_client:0.1
+DOCKER_IMAGE=kulap/libra_client:0.2
 USE_KULAP_FAUCET=true
 ```
 

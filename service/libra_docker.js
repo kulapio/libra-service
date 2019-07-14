@@ -49,7 +49,7 @@ class Libra {
   }
 
   runLibraCli() {
-    const DOCKER_IMAGE = process.env.DOCKER_IMAGE || 'kulap/libra_client:0.1'
+    const DOCKER_IMAGE = process.env.DOCKER_IMAGE || 'kulap/libra_client:0.2'
     const source = spawn('docker', ['run', '--name', this.containerName, '--rm', '-i', DOCKER_IMAGE],
       { stdio: ['pipe', 'pipe', process.stderr] });
     return source
