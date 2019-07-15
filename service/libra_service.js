@@ -1,5 +1,5 @@
 const BigNumber = require('bignumber.js')
-const {LibraClient, LibraNetwork, Account, LibraWallet } = require('libra-core')
+const {LibraClient, LibraNetwork, Account, LibraWallet, LibraAdmissionControlStatus } = require('libra-core')
 
 class Libra {
   constructor () {
@@ -38,13 +38,28 @@ class Libra {
       mnemonic: mnemonic
     })
     const account = wallet.generateAccount(0)
-    const account2Address = toAddress
+    const amountToTransfer = BigNumber(amount).times(1e6)
+
+    // Stamp account state before transfering
+    const beforeAccountState = await client.getAccountState(account.getAddress())
 
     // Transfer
-    const result = await client.transferCoins(account, account2Address, BigNumber(amount).times(1e6))
+    const response = await client.transferCoins(account, toAddress, amountToTransfer)
+    if (response.acStatus !== LibraAdmissionControlStatus.ACCEPTED) {
+      console.log(JSON.stringify(response))
+      throw new Error(`admission_control failed with status ${LibraAdmissionControlStatus[response.acStatus]}`)
+    }
+
+    // Ensure sender account balance was reduced accordingly
+    await response.awaitConfirmation(client)
+    const afterAccountState = await client.getAccountState(account.getAddress())
+    if (afterAccountState.balance.toString(10) !== beforeAccountState.balance.minus(amountToTransfer).toString(10)) {
+      console.log(JSON.stringify(response))
+      throw new Error(`transfer failed`)
+    }
     
     return {
-      result: result,
+      response: response,
       address: account.getAddress().toHex()
     }
   }

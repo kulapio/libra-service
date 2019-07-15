@@ -26,85 +26,121 @@ app.get('/', (req, res) => {
 })
 
 app.post('/createWallet', async (req, res) => {
-  console.log('req body', req.body)
-  const libra = new LibraService()
+  try {
+    console.log('req body', req.body)
+    const libra = new LibraService()
 
-  // Create wallet
-  const createdResult = await libra.createWallet(AMOUNT_TO_MINT)
+    // Create wallet
+    const createdResult = await libra.createWallet(AMOUNT_TO_MINT)
 
-  // Mint
-  const faucent = new Faucent()
-  if (USE_KULAP_FAUCET) {
-    await faucent.getFaucetFromKulap(AMOUNT_TO_MINT, createdResult.address)
-  } else {
-    await faucent.getFaucetFromLibraTestnet(AMOUNT_TO_MINT, createdResult.address)
+    // Mint
+    const faucent = new Faucent()
+    if (USE_KULAP_FAUCET) {
+      await faucent.getFaucetFromKulap(AMOUNT_TO_MINT, createdResult.address)
+    } else {
+      await faucent.getFaucetFromLibraTestnet(AMOUNT_TO_MINT, createdResult.address)
+    }
+
+    const wallet = {
+      address: createdResult.address,
+      mnemonic: createdResult.mnemonic + ';1',
+      balance: AMOUNT_TO_MINT.toString(10)
+    }
+    console.log('wallet', wallet)
+    res.send(wallet)
+
+  } catch (error) {
+    console.error(error)
+    const response = {
+      msg: `${error}`
+    }
+    res.status(500).send(response)
   }
-
-  const wallet = {
-    address: createdResult.address,
-    mnemonic: createdResult.mnemonic + ';1',
-    balance: AMOUNT_TO_MINT.toString(10)
-  }
-  console.log('wallet', wallet)
-  res.send(wallet)
 })
 
 app.post('/getBalance', async (req, res) => {
-  console.log('req body', req.body)
-  const libra = new LibraService()
+  try {
+    console.log('req body', req.body)
+    const libra = new LibraService()
 
-  const address = req.body.address
-  const balance = await libra.queryBalance(address)
-  const wallet = {
-    address: address,
-    balance: balance
+    const address = req.body.address
+    const balance = await libra.queryBalance(address)
+    const wallet = {
+      address: address,
+      balance: balance
+    }
+    console.log('wallet', wallet)
+    res.send(wallet)
+
+  } catch (error) {
+    console.error(error)
+    const response = {
+      msg: `${error}`
+    }
+    res.status(500).send(response)
   }
-  console.log('wallet', wallet)
-  res.send(wallet)
 })
 
 app.post('/transfer', async (req, res) => {
-  console.log('req body', req.body)
-  const libra = new LibraService()
+  try {
+    console.log('req body', req.body)
+    const libra = new LibraService()
 
-  // let fromAddress = req.body.fromAddress
-  const mnemonic = req.body.mnemonic.split(';')[0]
-  const toAddress = req.body.toAddress
-  const amount = req.body.amount
-  const result = await libra.transfer(mnemonic, toAddress, amount)
-  const wallet = {
-    address: result.address,
-    toAddress: toAddress,
-    amount: amount
+    // let fromAddress = req.body.fromAddress
+    const mnemonic = req.body.mnemonic.split(';')[0]
+    const toAddress = req.body.toAddress
+    const amount = req.body.amount
+    const result = await libra.transfer(mnemonic, toAddress, amount)
+    const wallet = {
+      address: result.address,
+      toAddress: toAddress,
+      amount: amount
+    }
+    console.log('wallet', wallet)
+    res.send(wallet)
+
+  } catch (error) {
+    console.error(error)
+    const response = {
+      msg: `${error}`
+    }
+    res.status(500).send(response)
   }
-  console.log('wallet', wallet)
-  res.send(wallet)
 })
 
 app.post('/transactionHistory', async (req, res) => {
-  console.log('req body', req.body)
-  const address = req.body.address
+  try {
+    console.log('req body', req.body)
+    const address = req.body.address
 
-  // Sent
-  const sentLibra = new LibraDocker()
-  const sentTransactions = await sentLibra.queryTransaction(address, 'sent')
+    // Sent
+    const sentLibra = new LibraDocker()
+    const sentTransactions = await sentLibra.queryTransaction(address, 'sent')
 
-  // Received
-  const receivedLibra = new LibraDocker()
-  const receivedTransactions = await receivedLibra.queryTransaction(address, 'received')
+    // Received
+    const receivedLibra = new LibraDocker()
+    const receivedTransactions = await receivedLibra.queryTransaction(address, 'received')
 
-  // Merge
-  let transactions = sentTransactions.transactions.concat(receivedTransactions.transactions)
-  
-  // Sort by transaction version desc
-  transactions = transactions.sort((a, b) => {
-    return b.transactionVersion - a.transactionVersion
-  })
+    // Merge
+    let transactions = sentTransactions.transactions.concat(receivedTransactions.transactions)
+    
+    // Sort by transaction version desc
+    transactions = transactions.sort((a, b) => {
+      return b.transactionVersion - a.transactionVersion
+    })
 
-  console.log(`query transaction wallet ${address}`)
-  res.send({
-    transactions: transactions
-  })
+    console.log(`query transaction wallet ${address}`)
+    res.send({
+      transactions: transactions
+    })
+
+  } catch (error) {
+    console.error(error)
+    const response = {
+      msg: `${error}`
+    }
+    res.status(500).send(response)
+  }
 })
 
 app.post('/mint', async (req, res) => {
@@ -127,6 +163,10 @@ app.post('/mint', async (req, res) => {
     })
   } catch (error) {
     console.error(error)
+    const response = {
+      msg: `${error}`
+    }
+    res.status(500).send(response)
   }
 })
 
