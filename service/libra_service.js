@@ -91,7 +91,7 @@ class Libra {
       throw new Error(`Internal server error`)
     }
 
-    console.log(response.data.result)
+    // console.log(response.data.result)
 
     // Transform data
     let transactions = response.data.result.map(transaction => {
