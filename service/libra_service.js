@@ -1,5 +1,7 @@
 const BigNumber = require('bignumber.js')
 const {LibraClient, LibraNetwork, Account, LibraWallet, LibraAdmissionControlStatus } = require('libra-core')
+const axios = require('axios')
+const moment = require('moment')
 
 class Libra {
   constructor () {
@@ -12,7 +14,7 @@ class Libra {
     const accountState = await client.getAccountState(address)
   
     // balance in micro libras
-    const balanceInMicroLibras = BigNumber(accountState.balance.toString())
+    const balanceInMicroLibras = BigNumber(accountState.balance.toString(10))
 
     const balace = balanceInMicroLibras.dividedBy(BigNumber(1e6))
 
@@ -75,6 +77,68 @@ class Libra {
       address: address,
       amount: BigNumber(amount).toString(10)
     }
+  }
+
+  async queryTransactionHistory(address) {
+    // Get transaction histories from libexplorer
+    const url = `https://api-test.libexplorer.com/api?module=account&action=txlist&address=${address}`
+    console.log(`callinng faucet ${url}`)
+    const response = await axios.get(url)
+
+    // Valdiate response
+    if (response === undefined || response.data === undefined || response.data.status !== '1') {
+      console.error(`Failed response ${response}`)
+      throw new Error(`Internal server error`)
+    }
+
+    console.log(response.data.result)
+
+    // Transform data
+    let transactions = response.data.result.map(transaction => {
+      // Convert from micro libras
+      const amountInBaseUnit = BigNumber(transaction.value).div(1e6)
+      let output = {
+        amount: amountInBaseUnit.toString(10),
+        fromAddress: transaction.from,
+        toAddress: transaction.to,
+        date: moment.utc(parseInt(transaction.expirationTime) * 1000).format(),
+        transactionVersion: parseInt(transaction.version),
+        explorerLink: `https://libexplorer.com/version/${transaction.version}`
+      }
+      // Mint
+      if (transaction.from === '0000000000000000000000000000000000000000000000000000000000000000') {
+        output.event = 'mint'
+        output.type = 'mint_transaction'
+      // Sent
+      } else if (transaction.from.toLowerCase() === address.toLowerCase()) {
+        output.event = 'sent'
+        output.type = 'peer_to_peer_transaction'
+      // Received
+      } else {
+        output.event = 'received'
+        output.type = 'peer_to_peer_transaction'
+      }
+      return output
+    })
+
+    // Sort by transaction version desc
+    transactions = transactions.sort((a, b) => {
+      return b.transactionVersion - a.transactionVersion
+    })
+
+    return transactions
+  }
+
+  async accountState(address) {
+    const client = new LibraClient({ network: LibraNetwork.Testnet })
+
+    const accountState = await client.getAccountState(address)
+
+    const { sentEventsCount, receivedEventsCount } = accountState
+
+    
+
+    return { sentEventsCount, receivedEventsCount}
   }
 }
 

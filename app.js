@@ -108,30 +108,55 @@ app.post('/transfer', async (req, res) => {
   }
 })
 
+// app.post('/transactionHistory', async (req, res) => {
+//   try {
+//     console.log('req body', req.body)
+//     const address = req.body.address
+
+//     // Sent
+//     const sentLibra = new LibraDocker()
+//     const sentTransactions = await sentLibra.queryTransaction(address, 'sent')
+
+//     // Received
+//     const receivedLibra = new LibraDocker()
+//     const receivedTransactions = await receivedLibra.queryTransaction(address, 'received')
+
+//     // Merge
+//     let transactions = sentTransactions.transactions.concat(receivedTransactions.transactions)
+    
+//     // Sort by transaction version desc
+//     transactions = transactions.sort((a, b) => {
+//       return b.transactionVersion - a.transactionVersion
+//     })
+
+//     console.log(`query transaction wallet ${address}`)
+//     res.send({
+//       transactions: transactions
+//     })
+
+//   } catch (error) {
+//     console.error(error)
+//     const response = {
+//       msg: `${error}`
+//     }
+//     res.status(500).send(response)
+//   }
+// })
+
+
 app.post('/transactionHistory', async (req, res) => {
   try {
     console.log('req body', req.body)
     const address = req.body.address
 
     // Sent
-    const sentLibra = new LibraDocker()
-    const sentTransactions = await sentLibra.queryTransaction(address, 'sent')
-
-    // Received
-    const receivedLibra = new LibraDocker()
-    const receivedTransactions = await receivedLibra.queryTransaction(address, 'received')
-
-    // Merge
-    let transactions = sentTransactions.transactions.concat(receivedTransactions.transactions)
+    const sentLibra = new LibraService()
+    const result = await sentLibra.queryTransactionHistory(address)
     
-    // Sort by transaction version desc
-    transactions = transactions.sort((a, b) => {
-      return b.transactionVersion - a.transactionVersion
-    })
 
-    console.log(`query transaction wallet ${address}`)
+    console.log(`result ${JSON.stringify(result)}`)
     res.send({
-      transactions: transactions
+      transactions: result
     })
 
   } catch (error) {
