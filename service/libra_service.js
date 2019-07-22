@@ -1,18 +1,17 @@
 const BigNumber = require('bignumber.js')
-const {LibraClient, LibraNetwork, Account, LibraWallet, LibraAdmissionControlStatus } = require('libra-core')
+const { LibraClient, LibraNetwork, Account, LibraWallet, LibraAdmissionControlStatus } = require('libra-core')
 const axios = require('axios')
 const moment = require('moment')
 
 class Libra {
-  constructor () {
-
+  constructor() {
   }
 
   async queryBalance(address) {
     const client = new LibraClient({ network: LibraNetwork.Testnet })
-  
+
     const accountState = await client.getAccountState(address)
-  
+
     // balance in micro libras
     const balanceInMicroLibras = BigNumber(accountState.balance.toString(10))
 
@@ -36,9 +35,7 @@ class Libra {
 
   async transfer(mnemonic, toAddress, amount) {
     const client = new LibraClient({ network: LibraNetwork.Testnet })
-    const wallet = new LibraWallet({
-      mnemonic: mnemonic
-    })
+    const wallet = new LibraWallet({ mnemonic: mnemonic })
     const account = wallet.generateAccount(0)
     const amountToTransfer = BigNumber(amount).times(1e6)
 
@@ -59,7 +56,7 @@ class Libra {
       console.log(JSON.stringify(response))
       throw new Error(`transfer failed`)
     }
-    
+
     return {
       response: response,
       address: account.getAddress().toHex()
@@ -83,11 +80,12 @@ class Libra {
     // Get transaction histories from libexplorer
     const url = `https://api-test.libexplorer.com/api?module=account&action=txlist&address=${address}`
     console.log(`callinng faucet ${url}`)
-    const response = await axios.get(url)
+    const response = await axios.get(url, { timeout: 10000 }).then(resp => resp).catch(error => ({ error: error.message }))
 
     // Valdiate response
-    if (response === undefined || response.data === undefined || response.data.status !== '1') {
-      console.error(`Failed response ${response}`)
+    if (response.error || response.data.status !== '1') {
+      const msg = response.error ? response.error : JSON.stringify(response.data)
+      console.error(`Failed response ${msg}`)
       throw new Error(`Internal server error`)
     }
 
@@ -109,11 +107,11 @@ class Libra {
       if (transaction.from === '0000000000000000000000000000000000000000000000000000000000000000') {
         output.event = 'mint'
         output.type = 'mint_transaction'
-      // Sent
+        // Sent
       } else if (transaction.from.toLowerCase() === address.toLowerCase()) {
         output.event = 'sent'
         output.type = 'peer_to_peer_transaction'
-      // Received
+        // Received
       } else {
         output.event = 'received'
         output.type = 'peer_to_peer_transaction'
@@ -136,11 +134,8 @@ class Libra {
 
     const { sentEventsCount, receivedEventsCount } = accountState
 
-    
-
-    return { sentEventsCount, receivedEventsCount}
+    return { sentEventsCount, receivedEventsCount }
   }
 }
-
 
 module.exports = Libra
