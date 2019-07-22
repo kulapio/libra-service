@@ -79,11 +79,22 @@ class Libra {
   async queryTransactionHistory(address) {
     // Get transaction histories from libexplorer
     const url = `https://api-test.libexplorer.com/api?module=account&action=txlist&address=${address}`
-    console.log(`callinng faucet ${url}`)
+    console.log(`calling ${url}`)
     const response = await axios.get(url, { timeout: 10000 }).then(resp => resp).catch(error => ({ error: error.message }))
 
     // Valdiate response
     if (response.error || response.data.status !== '1') {
+      if (response.data.status === '0') {
+        // Case of Invalid address format
+        if (response.data.message === 'NOTOK') {
+          throw new Error(response.data.result)
+
+        // Case of No transactions found
+        } else if (response.data.message === 'No transactions found') {
+          return []
+        }
+      }
+
       const msg = response.error ? response.error : JSON.stringify(response.data)
       console.error(`Failed response ${msg}`)
       throw new Error(`Internal server error`)
