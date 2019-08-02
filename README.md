@@ -12,8 +12,8 @@ To build that APIs we need shell interactive that can send requests to Libra-cli
 Required
 --------
 
-- node 10.15.3
-- docker
+- [node 12](https://nodejs.org/en/) or latest
+- [docker](https://www.docker.com/)
 
 Install
 -------
