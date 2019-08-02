@@ -1,0 +1,24 @@
+language: node_js
+
+os:
+  - linux
+  - osx
+
+sudo: false
+
+node_js:
+  - 12
+  - 11
+  - 10
+
+install:
+  - npm install
+  - npm install -g codecov
+
+script:
+  - npm test
+  - codecov
+  
+branches:
+  only:
+    - master
