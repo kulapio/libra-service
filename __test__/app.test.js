@@ -112,7 +112,7 @@ describe('Test service (online)', () => {
       const walletA = await post('/createWallet').expect(200)
       console.log('walletA', walletA.body)
       const walletB = await post('/createWallet').expect(200)
-      console.log('walletB', walletA.body)
+      console.log('walletB', walletB.body)
 
       // Transfer A -> B 25 coins
       await post('/transfer', {toAddress: walletB.body.address, mnemonic: walletA.body.mnemonic, amount: 25}).expect(200)
@@ -125,38 +125,38 @@ describe('Test service (online)', () => {
       await sleep(500)
 
       // Transfer A -> B 10 coins
-      await post('/transfer', {toAddress: walletB.body.address, mnemonic: walletA.body.mnemonic, amount: 10}).expect(200)
-      console.log('tx 3')
-      await sleep(500)
+      // await post('/transfer', {toAddress: walletA.body.address, mnemonic: walletB.body.mnemonic, amount: 10}).expect(200)
+      // console.log('tx 3')
+      // await sleep(500)
 
       // Get transaction history
       const response = await post('/transactionHistory', {address: walletA.body.address}).expect(200)
       const { transactions } = response.body
 
       // Validate
-      // tx 0
+      // tx 1
       expect(transactions[0].type).toEqual('peer_to_peer_transaction')
-      expect(transactions[0].event).toEqual('sent')
-      expect(transactions[0].fromAddress).toEqual(walletA.body.address)
-      expect(transactions[0].toAddress).toEqual(walletB.body.address)
-      expect(transactions[0].amount).toEqual("10")
+      expect(transactions[0].event).toEqual('received')
+      expect(transactions[0].fromAddress).toEqual(walletB.body.address)
+      expect(transactions[0].toAddress).toEqual(walletA.body.address)
+      expect(transactions[0].amount).toEqual("57")
       expect(transactions[0].transactionVersion.toString(10)).toMatch(/([0-9])/)
 
-      // tx 1
+      // tx 2
       expect(transactions[1].type).toEqual('peer_to_peer_transaction')
-      expect(transactions[1].event).toEqual('received')
-      expect(transactions[1].fromAddress).toEqual(walletB.body.address)
-      expect(transactions[1].toAddress).toEqual(walletA.body.address)
-      expect(transactions[1].amount).toEqual("57")
+      expect(transactions[1].event).toEqual('sent')
+      expect(transactions[1].fromAddress).toEqual(walletA.body.address)
+      expect(transactions[1].toAddress).toEqual(walletB.body.address)
+      expect(transactions[1].amount).toEqual("25")
       expect(transactions[1].transactionVersion.toString(10)).toMatch(/([0-9])/)
 
-      // tx 2
-      expect(transactions[2].type).toEqual('peer_to_peer_transaction')
-      expect(transactions[2].event).toEqual('sent')
-      expect(transactions[2].fromAddress).toEqual(walletA.body.address)
-      expect(transactions[2].toAddress).toEqual(walletB.body.address)
-      expect(transactions[2].amount).toEqual("25")
-      expect(transactions[2].transactionVersion.toString(10)).toMatch(/([0-9])/)
+      // tx 3
+      // expect(transactions[2].type).toEqual('peer_to_peer_transaction')
+      // expect(transactions[2].event).toEqual('sent')
+      // expect(transactions[2].fromAddress).toEqual(walletA.body.address)
+      // expect(transactions[2].toAddress).toEqual(walletB.body.address)
+      // expect(transactions[2].amount).toEqual("25")
+      // expect(transactions[2].transactionVersion.toString(10)).toMatch(/([0-9])/)
 
     },
     120000
