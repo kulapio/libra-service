@@ -30,8 +30,8 @@ cd libra-service
 # Install dependencies
 npm i
 
-# Apply default config
-cp .env.example .env
+# Apply default config from .env.example
+npm run prestart
 ```
 
 Config

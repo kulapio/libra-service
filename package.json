@@ -11,6 +11,9 @@
     "test-dev": "jest --watchAll",
     "coverage": "jest --coverage",
     "dev": "nodemon index.js",
+    "prestart": "run-script-os",
+    "prestart:win32": "copy .env.example .env",
+    "prestart:darwin:linux": "cp .env.example .env",
     "start": "node index.js"
   },
   "keywords": [],
@@ -30,6 +33,7 @@
   "devDependencies": {
     "jest": "^24.8.0",
     "nodemon": "^1.19.1",
+    "run-script-os": "^1.0.7",
     "supertest": "^4.0.2"
   }
 }
