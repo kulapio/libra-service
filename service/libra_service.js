@@ -1,5 +1,5 @@
 const BigNumber = require('bignumber.js')
-const { LibraClient, LibraNetwork, Account, LibraWallet, LibraAdmissionControlStatus } = require('libra-core')
+const { LibraClient, LibraNetwork, Account, LibraWallet, LibraAdmissionControlStatus } = require('kulap-libra')
 const axios = require('axios')
 const moment = require('moment')
 
