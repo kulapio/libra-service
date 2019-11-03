@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/suraneti/libra-service.svg?branch=master)](https://travis-ci.org/suraneti/libra-service)
 
+For Javascript api please use kulap-lira at https://github.com/kulapio/libra-core.
+
 Docs
 ----
 
