@@ -28,7 +28,7 @@
     "express": "^4.17.1",
     "moment": "^2.24.0",
     "kulap-libra": "^1.0.17",
-    "lodash": ">=4.17.13"
+    "lodash": ">=4.17.19"
   },
   "devDependencies": {
     "jest": "^24.8.0",
